@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz HTML</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question h3 {
+            margin-top: 0;
+            color: #444;
+        }
+        .options {
+            list-style-type: none;
+            padding: 0;
+        }
+        .option {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #eee;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            word-break: break-word;
+            font-family: monospace;
+            line-height: 1.5;
+        }
+        .option:hover {
+            background-color: #ddd;
+        }
+        .selected-correct {
+            background-color: #4CAF50 !important; /* Verde più intenso */
+            color: white;
+            font-weight: bold;
+        }
+        .selected-partially {
+            background-color: #FFC107 !important; /* Giallo più intenso */
+            color: #000;
+            font-weight: bold;
+        }
+        .selected-incorrect {
+            background-color: #F44336 !important; /* Rosso più intenso */
+            color: white;
+            font-weight: bold;
+        }
+        .result-message {
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .correct {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        .partially {
+            background-color: #FFC107;
+            color: #000;
+            font-weight: bold;
+        }
+        .incorrect {
+            background-color: #F44336;
+            color: white;
+            font-weight: bold;
+        }
+        .button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .feedback {
+            padding: 12px;
+            margin-top: 10px;
+            display: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .progress-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            transition: width 0.5s;
+        }
+        .score-container {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            display: none;
+        }
+        .progress-bars {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+        }
+        .vertical-progress {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .vertical-bar-container {
+            width: 50px;
+            height: 200px;
+            background-color: #eee;
+            border-radius: 5px;
+            position: relative;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+        }
+        .vertical-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: #F44336; /* Default red */
+            border-radius: 0 0 5px 5px;
+            transition: height 1s, background-color 1s;
+        }
+        .vertical-bar.gold {
+            background-color: #FFD700;
+        }
+        .vertical-bar.green {
+            background-color: #4CAF50;
+        }
+        .vertical-bar.yellow {
+            background-color: #FFC107;
+        }
+        .vertical-bar.red {
+            background-color: #F44336;
+        }
+        .progress-label {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .percentage {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .progress-description {
+            max-width: 200px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Stile responsive per dispositivi mobili */
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .quiz-container {
+                padding: 10px;
+            }
+            .question {
+                padding: 10px;
+            }
+            button {
+                padding: 8px 15px;
+                margin: 5px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Quiz HTML - 30 Domande</h1>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" id="progress">0%</div>
+            </div>
+            <p>Domanda <span id="current-question">1</span> di <span id="total-questions">30</span></p>
+        </div>
+        <div id="quiz"></div>
+        <div class="button-container">
+            <button id="prev-button" style="display: none;">Precedente</button>
+            <button id="next-button">Successiva</button>
+            <button id="submit-button" style="display: none;">Concludi Quiz</button>
+        </div>
+        <div class="score-container" id="score-container">
+            <h2>Risultati del Quiz</h2>
+            <p>Hai risposto correttamente a <span id="correct-answers">0</span> domande su <span id="total-answers">30</span></p>
+            
+            <div class="progress-bars">
+                <div class="vertical-progress">
+                    <div class="vertical-bar-container">
+                        <div id="first-attempt-bar" class="vertical-bar"></div>
+                    </div>
+                    <div class="percentage" id="first-attempt-score">0%</div>
+                    <div class="progress-label">Primo tentativo</div>
+                    <div class="progress-description">Percentuale di risposte corrette al primo tentativo.</div>
+                </div>
+                
+                <div class="vertical-progress">
+                    <div class="vertical-bar-container">
+                        <div id="final-score-bar" class="vertical-bar"></div>
+                    </div>
+                    <div class="percentage" id="final-score">0%</div>
+                    <div class="progress-label">Punteggio finale</div>
+                    <div class="progress-description">Percentuale di risposte corrette alla fine del quiz.</div>
+                </div>
+            </div>
+            
+            <button id="restart-button">Ricomincia Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        // Definizione delle domande e risposte
+        const questions = [
+            {
+                question: "Quale di questi elementi identifica una classe nel linguaggio di programmazione HTML?",
+                options: ["div", "row", "p"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quali delle seguenti righe di codice permettono di ottenere un testo in grassetto?",
+                options: ["&lt;p style=\"font-style: bold;\"&gt;Testo in grassetto&lt;/p&gt;", "&lt;p style=\"font-weight: bold;\"&gt;Testo in grassetto&lt;/p&gt;", "&lt;p&gt;&lt;b&gt;Testo in grassetto&lt;/b&gt;&lt;/p&gt;"],
+                correctAnswer: "BC"
+            },
+            {
+                question: "Quale dei seguenti blocchi di codice è sbagliato?",
+                options: ["&lt;div class=\"row\"&gt;&lt;h1&gt;Titolo&lt;/h1&gt;&lt;/div&gt;", "&lt;h1&gt;Titolo&lt;/h1&gt;", "&lt;row style=\"font-size: 60px; font-weight: bold;\"&gt;Titolo&lt;/row&gt;"],
+                correctAnswer: "C"
+            },
+            {
+                question: "Quale tag HTML si utilizza per creare un link ipertestuale?",
+                options: ["&lt;a href=\"pagina.html\"&gt;Link&lt;/a&gt;", "&lt;link rel=\"pagina.html\"&gt;Link&lt;/link&gt;", "&lt;href&gt;pagina.html&lt;/href&gt;"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Quale attributo HTML viene utilizzato per specificare lo stile inline di un elemento?",
+                options: ["class", "id", "style"],
+                correctAnswer: "C"
+            },
+            {
+                question: "Quale tag HTML è corretto per inserire un'immagine?",
+                options: ["&lt;img href=\"immagine.jpg\" alt=\"descrizione\"&gt;", "&lt;img src=\"immagine.jpg\" alt=\"descrizione\"&gt;", "&lt;image src=\"immagine.jpg\" alt=\"descrizione\"&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale è il tag corretto per creare un paragrafo in HTML?",
+                options: ["&lt;paragraph&gt;Testo del paragrafo&lt;/paragraph&gt;", "&lt;p&gt;Testo del paragrafo&lt;/p&gt;", "&lt;para&gt;Testo del paragrafo&lt;/para&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale dei seguenti è un commento valido in HTML?",
+                options: ["// Questo è un commento", "/* Questo è un commento */", "&lt;!-- Questo è un commento --&gt;"],
+                correctAnswer: "C"
+            },
+            {
+                question: "Come si crea un elenco non ordinato (bulleted) in HTML?",
+                options: ["&lt;list&gt;...&lt;/list&gt;", "&lt;ul&gt;...&lt;/ul&gt;", "&lt;ol&gt;...&lt;/ol&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale doctype è corretto per HTML5?",
+                options: ["&lt;!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\"&gt;", "&lt;!DOCTYPE html&gt;", "&lt;DOCTYPE HTML5&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale delle seguenti è la sintassi corretta per creare una casella di controllo in HTML?",
+                options: ["&lt;input type=\"checkbox\" name=\"opzione\"&gt;", "&lt;checkbox name=\"opzione\"&gt;", "&lt;check name=\"opzione\"&gt;"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Quale tag HTML si utilizza per creare una tabella?",
+                options: ["&lt;table&gt;...&lt;/table&gt;", "&lt;tab&gt;...&lt;/tab&gt;", "&lt;grid&gt;...&lt;/grid&gt;"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Quale attributo HTML specifica un testo alternativo per un'immagine?",
+                options: ["title", "alt", "description"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale tag si usa per creare un'intestazione di livello 2?",
+                options: ["&lt;head2&gt;...&lt;/head2&gt;", "&lt;h2&gt;...&lt;/h2&gt;", "&lt;heading2&gt;...&lt;/heading2&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale tag HTML crea una linea orizzontale?",
+                options: ["&lt;hr&gt;", "&lt;line&gt;", "&lt;br&gt;"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Quale è la sintassi corretta per applicare più classi a un elemento HTML?",
+                options: ["&lt;div class=\"classe1\" class=\"classe2\"&gt;...&lt;/div&gt;", "&lt;div class=\"classe1 classe2\"&gt;...&lt;/div&gt;", "&lt;div classes=\"classe1 classe2\"&gt;...&lt;/div&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Come si crea un campo di input per l'inserimento di un indirizzo email?",
+                options: ["&lt;input type=\"email\" name=\"email\"&gt;", "&lt;input type=\"text\" name=\"email\"&gt;", "&lt;email name=\"email\"&gt;"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Quale tag HTML definisce informazioni importanti o urgenti?",
+                options: ["&lt;strong&gt;...&lt;/strong&gt;", "&lt;important&gt;...&lt;/important&gt;", "&lt;em&gt;...&lt;/em&gt;"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Quale tag si usa per definire un footer in HTML5?",
+                options: ["&lt;bottom&gt;...&lt;/bottom&gt;", "&lt;section class=\"footer\"&gt;...&lt;/section&gt;", "&lt;footer&gt;...&lt;/footer&gt;"],
+                correctAnswer: "C"
+            },
+            {
+                question: "Quale tag HTML si usa per definire una lista di definizioni?",
+                options: ["&lt;dl&gt;...&lt;/dl&gt;", "&lt;list type=\"definition\"&gt;...&lt;/list&gt;", "&lt;def&gt;...&lt;/def&gt;"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Quale attributo si utilizza per specificare il testo che appare quando il mouse passa sopra un elemento?",
+                options: ["hover", "title", "alt-text"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Come si crea un pulsante in HTML?",
+                options: ["&lt;input type=\"button\" value=\"Clicca qui\"&gt;", "&lt;button&gt;Clicca qui&lt;/button&gt;", "Entrambe le risposte A e B sono corrette"],
+                correctAnswer: "C"
+            },
+            {
+                question: "Quale tag HTML5 si utilizza per definire la navigazione principale di un sito?",
+                options: ["&lt;menu&gt;...&lt;/menu&gt;", "&lt;nav&gt;...&lt;/nav&gt;", "&lt;navigation&gt;...&lt;/navigation&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale attributo si utilizza per specificare l'URL di destinazione di un form?",
+                options: ["method", "action", "target"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Come si crea un campo obbligatorio in un form HTML?",
+                options: ["&lt;input type=\"text\" necessary&gt;", "&lt;input type=\"text\" required&gt;", "&lt;input type=\"text\" mandatory&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale attributo si utilizza per l'autocompletamento nei campi di un form?",
+                options: ["autocomplete", "autofill", "autosuggestion"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Quale tag HTML5 si utilizza per incorporare contenuti audio?",
+                options: ["&lt;sound src=\"file.mp3\"&gt;&lt;/sound&gt;", "&lt;mp3&gt;file.mp3&lt;/mp3&gt;", "&lt;audio src=\"file.mp3\"&gt;&lt;/audio&gt;"],
+                correctAnswer: "C"
+            },
+            {
+                question: "Come si imposta il colore di sfondo di un elemento in HTML?",
+                options: ["&lt;div background-color=\"blue\"&gt;...&lt;/div&gt;", "&lt;div style=\"background-color: blue;\"&gt;...&lt;/div&gt;", "&lt;div bgcolor=\"blue\"&gt;...&lt;/div&gt;"],
+                correctAnswer: "B"
+            },
+            {
+                question: "Quale tag HTML5 si utilizza per definire un articolo indipendente?",
+                options: ["&lt;article&gt;...&lt;/article&gt;", "&lt;post&gt;...&lt;/post&gt;", "&lt;content&gt;...&lt;/content&gt;"],
+                correctAnswer: "A"
+            },
+            {
+                question: "Come si crea un menu a tendina in HTML?",
+                options: ["&lt;dropdown&gt;...&lt;/dropdown&gt;", "&lt;select&gt;...&lt;/select&gt;", "&lt;option&gt;...&lt;/option&gt;"],
+                correctAnswer: "B"
+            }
+        ];
+
+        // Inizializzazione delle variabili
+        let currentQuestion = 0;
+        const totalQuestions = questions.length;
+        let userAnswers = Array(totalQuestions).fill("");
+        let firstAttemptAnswers = Array(totalQuestions).fill(""); // Per tenere traccia delle prime risposte
+        let score = 0;
+        let firstAttemptScore = 0;
+
+        // Elementi DOM
+        const quizContainer = document.getElementById('quiz');
+        const progressBar = document.getElementById('progress');
+        const currentQuestionEl = document.getElementById('current-question');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const submitButton = document.getElementById('submit-button');
+        const scoreContainer = document.getElementById('score-container');
+        const correctAnswers = document.getElementById('correct-answers');
+        const totalAnswers = document.getElementById('total-answers');
+        const restartButton = document.getElementById('restart-button');
+        const firstAttemptScoreElement = document.getElementById('first-attempt-score');
+        const finalScoreElement = document.getElementById('final-score');
+
+        // Inizializzazione del quiz
+        function initQuiz() {
+            totalQuestionsEl.textContent = totalQuestions;
+            showQuestion(currentQuestion);
+            prevButton.addEventListener('click', showPreviousQuestion);
+            nextButton.addEventListener('click', showNextQuestion);
+            submitButton.addEventListener('click', submitQuiz);
+            restartButton.addEventListener('click', restartQuiz);
+        }
+
+        // Mostra la domanda corrente
+        function showQuestion(index) {
+            currentQuestionEl.textContent = index + 1;
+            
+            // Aggiorna la barra di progresso
+            const progressPercentage = ((index + 1) / totalQuestions) * 100;
+            progressBar.style.width = progressPercentage + '%';
+            progressBar.textContent = Math.round(progressPercentage) + '%';
+            
+            // Gestione dei pulsanti
+            if (index === 0) {
+                prevButton.style.display = 'none';
+            } else {
+                prevButton.style.display = 'inline-block';
+            }
+            
+            if (index === totalQuestions - 1) {
+                nextButton.style.display = 'none';
+                submitButton.style.display = 'inline-block';
+            } else {
+                nextButton.style.display = 'inline-block';
+                submitButton.style.display = 'none';
+            }
+            
+            // Crea l'HTML per la domanda corrente
+            const question = questions[index];
+            const optionLetters = ['A', 'B', 'C'];
+            
+            let questionHTML = `
+                <div class="question">
+                    <h3>${index + 1}. ${question.question}</h3>
+                    <ul class="options">
+            `;
+            
+            question.options.forEach((option, i) => {
+                const isSelected = userAnswers[index].includes(optionLetters[i]);
+                questionHTML += `
+                    <li class="option ${isSelected ? getSelectionClass(index, optionLetters[i]) : ''}" 
+                        data-index="${i}" 
+                        onclick="selectOption(${index}, '${optionLetters[i]}')">
+                        ${optionLetters[i]}. ${option}
+                    </li>
+                `;
+            });
+            
+            questionHTML += `
+                    </ul>
+                    <div class="feedback" id="feedback-${index}"></div>
+                </div>
+            `;
+            
+            quizContainer.innerHTML = questionHTML;
+            
+            // Mostra il feedback se l'utente ha già risposto
+            if (userAnswers[index] !== "") {
+                showFeedback(index);
+            }
+        }
+
+        // Funzione per la selezione delle opzioni
+        function selectOption(questionIndex, optionLetter) {
+            // Salva la prima risposta se non è ancora stata data
+            if (firstAttemptAnswers[questionIndex] === "") {
+                firstAttemptAnswers[questionIndex] = optionLetter;
+            }
+            
+            // Salva la risposta dell'utente
+            userAnswers[questionIndex] = optionLetter;
+            
+            // Aggiorna l'interfaccia per mostrare la selezione
+            const options = document.querySelectorAll('.option');
+            options.forEach((option, i) => {
+                if (i === optionLetter.charCodeAt(0) - 65) { // Converti A->0, B->1, C->2
+                    const selectionClass = getSelectionClass(questionIndex, optionLetter);
+                    option.className = `option ${selectionClass}`;
+                } else {
+                    option.className = 'option';
+                }
+            });
+            
+            // Mostra il feedback per la risposta
+            showFeedback(questionIndex);
+        }
+
+        // Determina la classe CSS in base alla correttezza della risposta
+        function getSelectionClass(questionIndex, optionLetter) {
+            const correctAnswer = questions[questionIndex].correctAnswer;
+            
+            if (correctAnswer.includes(optionLetter)) {
+                if (correctAnswer.length > 1 && correctAnswer !== optionLetter) {
+                    return 'selected-partially'; // Giallo per risposte parzialmente corrette
+                } else {
+                    return 'selected-correct'; // Verde
+                }
+            } else {
+                return 'selected-incorrect'; // Rosso
+            }
+        }
+
+        // Mostra il feedback per la risposta
+        function showFeedback(questionIndex) {
+            const userAnswer = userAnswers[questionIndex];
+            const correctAnswer = questions[questionIndex].correctAnswer;
+            const feedbackElement = document.getElementById(`feedback-${questionIndex}`);
+            
+            if (feedbackElement) {
+                feedbackElement.style.display = 'block';
+                
+                // Preparazione delle spiegazioni per ogni domanda
+                const explanations = {
+                    0: {
+                        A: "'div' è un elemento contenitore per strutturare il documento, non identifica classi. Le classi si definiscono con l'attributo class.",
+                        B: "'row' è comunemente usato come nome di classe nei framework CSS come Bootstrap per definire righe nella griglia responsive.",
+                        C: "'p' è un tag per definire paragrafi di testo, non per identificare classi. Le classi sono valori dell'attributo class."
+                    },
+                    1: {
+                        A: "'font-style' controlla il corsivo (italic), non il grassetto. Per il grassetto via CSS si usa font-weight, non font-style.",
+                        B: "'font-weight: bold' imposta correttamente il grassetto tramite CSS inline. È il metodo standard per applicare il grassetto via stile.",
+                        C: "Il tag &lt;b&gt; è il metodo più diretto e semplice per ottenere il grassetto in HTML, anche se semanticamente &lt;strong&gt; è preferibile."
+                    },
+                    2: {
+                        A: "Struttura valida con un div (contenitore generico) che ha classe 'row' e contiene un'intestazione h1. Sintassi HTML corretta.",
+                        B: "Sintassi HTML standard valida per un'intestazione di primo livello, utilizzata per i titoli principali delle pagine.",
+                        C: "'row' non è un elemento HTML esistente ma un nome comunemente usato per classi nei framework CSS come Bootstrap."
+                    },
+                    3: {
+                        A: "Il tag &lt;a&gt; con attributo href è la sintassi standard per creare collegamenti ipertestuali cliccabili in qualsiasi documento HTML.",
+                        B: "Il tag &lt;link&gt; si usa per collegare risorse esterne come fogli di stile, non per creare link navigabili dall'utente.",
+                        C: "&lt;href&gt; è un attributo del tag anchor (&lt;a&gt;), non un tag HTML valido. Specifica la destinazione del collegamento."
+                    },
+                    4: {
+                        A: "'class' applica stili tramite selettori nei fogli CSS, ma non inserisce stili direttamente nell'elemento come fa style.",
+                        B: "'id' identifica univocamente un elemento per JavaScript o ancoraggi, non per impostare stili inline direttamente nell'elemento.",
+                        C: "L'attributo 'style' permette di inserire regole CSS direttamente nell'elemento HTML, creando stili inline che hanno alta priorità."
+                    },
+                    5: {
+                        A: "Per le immagini l'attributo corretto è 'src' (source), non 'href' che si usa per i link. Sintassi errata.",
+                        B: "Sintassi corretta e completa per inserire un'immagine con percorso sorgente e testo alternativo per accessibilità e SEO.",
+                        C: "Il tag per immagini è &lt;img&gt;, non &lt;image&gt;. L'attributo src è corretto ma il tag è sbagliato."
+                    },
+                    6: {
+                        A: "&lt;paragraph&gt; non esiste nelle specifiche HTML. L'elemento corretto per i paragrafi è &lt;p&gt;, più breve e standard.",
+                        B: "&lt;p&gt; è l'elemento standard per creare paragrafi di testo, uno dei tag più comuni e fondamentali in HTML.",
+                        C: "&lt;para&gt; non è un tag riconosciuto dagli standard HTML. Per i paragrafi si deve usare &lt;p&gt;."
+                    },
+                    7: {
+                        A: "Questa è la sintassi dei commenti in JavaScript o C++, non HTML. In HTML i commenti usano la notazione &lt;!-- --&gt;.",
+                        B: "Questa è la sintassi dei commenti in CSS o linguaggi come C, non in HTML. HTML richiede &lt;!-- --&gt;.",
+                        C: "&lt;!-- ... --&gt; è l'unica sintassi valida per i commenti in HTML. I browser nascondono questi contenuti dalla visualizzazione."
+                    },
+                    8: {
+                        A: "&lt;list&gt; non esiste nelle specifiche HTML. Per elenchi si usano &lt;ul&gt; (puntati) o &lt;ol&gt; (numerati), con &lt;li&gt; per gli elementi.",
+                        B: "&lt;ul&gt; (unordered list) crea elenchi puntati, con elementi &lt;li&gt; al suo interno. Struttura standard per liste non numerate.",
+                        C: "&lt;ol&gt; crea elenchi numerati o ordinati, non puntati. Per elenchi non ordinati (bulleted) si deve usare &lt;ul&gt;."
+                    },
+                    9: {
+                        A: "Questa è la dichiarazione DOCTYPE prolissa per HTML 4. HTML5 ha semplificato questa sintassi significativamente.",
+                        B: "HTML5 utilizza questa dichiarazione DOCTYPE semplificata. È la prima riga di ogni documento HTML5 valido.",
+                        C: "DOCTYPE non è un tag HTML da racchiudere tra &lt;&gt; ma una dichiarazione speciale. La sintassi mostrata è errata."
+                    },
+                    10: {
+                        A: "L'elemento input con type=\"checkbox\" crea caselle di spunta che l'utente può selezionare/deselezionare nei form HTML.",
+                        B: "&lt;checkbox&gt; non è un tag HTML valido. Per creare caselle di controllo si usa &lt;input type=\"checkbox\"&gt;.",
+                        C: "&lt;check&gt; non è un tag HTML valido. Le caselle di controllo richiedono l'elemento &lt;input&gt; con type appropriato."
+                    },
+                    11: {
+                        A: "&lt;table&gt; è il container principale per tabelle HTML. Contiene elementi &lt;tr&gt;, &lt;td&gt; e altri tag correlati alle tabelle.",
+                        B: "&lt;tab&gt; non è un tag HTML standard per tabelle o altri elementi. Per tabelle si usa &lt;table&gt;.",
+                        C: "&lt;grid&gt; non esiste in HTML standard. Per layout a griglia si usa CSS Grid o tabelle HTML con &lt;table&gt;."
+                    },
+                    12: {
+                        A: "'title' mostra tooltip al passaggio del mouse, mentre per le descrizioni alternative di immagini serve 'alt'.",
+                        B: "'alt' fornisce testo alternativo per screen reader e quando l'immagine non può essere caricata. Essenziale per l'accessibilità.",
+                        C: "'description' non è un attributo standard nelle specifiche HTML. Per descrivere immagini si usa 'alt' o 'title'."
+                    },
+                    13: {
+                        A: "&lt;head2&gt; non esiste nella specifica HTML. Per i titoli di livello 2 si usa &lt;h2&gt;, parte della famiglia h1-h6.",
+                        B: "&lt;h2&gt; è il tag standard per le intestazioni di secondo livello, parte della gerarchia di intestazioni da h1 a h6.",
+                        C: "&lt;heading2&gt; non esiste nella specifica HTML. I titoli usano la notazione breve &lt;h1&gt; fino a &lt;h6&gt;."
+                    },
+                    14: {
+                        A: "&lt;hr&gt; (horizontal rule) inserisce una linea orizzontale divisoria. In HTML5 ha significato semantico di cambio di argomento.",
+                        B: "&lt;line&gt; non è un tag HTML valido. Per linee si usa &lt;hr&gt; o si creano con CSS border.",
+                        C: "&lt;br&gt; crea interruzioni di riga nel testo, ma non inserisce linee visibili. Per linee orizzontali serve &lt;hr&gt;."
+                    },
+                    15: {
+                        A: "HTML non permette attributi duplicati come class=\"classe1\" class=\"classe2\". Il secondo sovrascrive il primo, causando errori.",
+                        B: "Più classi vanno separate da spazi all'interno dello stesso attributo class. Questa sintassi permette di applicare stili multipli.",
+                        C: "L'attributo 'classes' non esiste nelle specifiche HTML. Per applicare più classi si usa class=\"classe1 classe2 classe3\"."
+                    },
+                    16: {
+                        A: "HTML5 fornisce il tipo 'email' che offre validazione automatica del formato e tastiera email sui dispositivi mobili.",
+                        B: "Il tipo 'text' accetta qualsiasi input senza validazione. Per email è meglio usare type=\"email\" per il controllo formato.",
+                        C: "&lt;email&gt; non è un tag HTML valido. Per campi email si usa &lt;input type=\"email\"&gt; all'interno di un form."
+                    },
+                    17: {
+                        A: "&lt;strong&gt; indica informazioni importanti o urgenti, visualizzate in grassetto dai browser. Ha significato semantico di rilevanza.",
+                        B: "&lt;important&gt; non esiste nelle specifiche HTML. Per contenuti importanti si usa &lt;strong&gt; o attributi ARIA.",
+                        C: "&lt;em&gt; indica enfasi contestuale (visualizzata in corsivo), non informazioni urgenti o particolarmente importanti come &lt;strong&gt;."
+                    },
+                    18: {
+                        A: "&lt;bottom&gt; non è un tag HTML valido. Per i piè di pagina HTML5 offre l'elemento semantico &lt;footer&gt;.",
+                        B: "Funziona tecnicamente, ma non sfrutta la semantica HTML5. Meglio usare &lt;footer&gt; per migliorare SEO e accessibilità.",
+                        C: "&lt;footer&gt; è l'elemento semantico HTML5 progettato per contenere informazioni di chiusura come copyright, contatti o navigazione secondaria."
+                    },
+                    19: {
+                        A: "&lt;dl&gt; crea liste di definizioni, con &lt;dt&gt; per i termini e &lt;dd&gt; per le definizioni. Ideale per glossari.",
+                        B: "Questa sintassi non esiste in HTML standard. Per liste di definizioni si usa la struttura &lt;dl&gt;, &lt;dt&gt;, &lt;dd&gt;.",
+                        C: "&lt;def&gt; non è un tag HTML valido. Per definizioni si usa la struttura standard &lt;dl&gt;, &lt;dt&gt;, &lt;dd&gt;."
+                    },
+                    20: {
+                        A: "'hover' è uno pseudo-selettore in CSS (:hover), non un attributo HTML. Si usa nei fogli di stile, non nel markup.",
+                        B: "'title' mostra un tooltip informativo quando l'utente passa il mouse sopra l'elemento. Utile per dare informazioni aggiuntive.",
+                        C: "'alt-text' non è un attributo HTML standard. Per tooltip si usa 'title', per testo alternativo alle immagini 'alt'."
+                    },
+                    21: {
+                        A: "Metodo valido usando un campo input con type=\"button\". Offre controllo tramite il value per il testo visualizzato.",
+                        B: "Metodo valido usando il tag semantico &lt;button&gt;. Permette di inserire HTML all'interno del pulsante, non solo testo.",
+                        C: "Entrambi i metodi sono corretti e hanno vantaggi diversi. &lt;button&gt; offre più flessibilità, input è più semplice."
+                    },
+                    22: {
+                        A: "&lt;menu&gt; è pensato per menu contestuali o liste di comandi, non per la navigazione principale del sito.",
+                        B: "&lt;nav&gt; identifica semanticamente la navigazione principale, migliorando accessibilità e SEO. Tag introdotto in HTML5.",
+                        C: "&lt;navigation&gt; non esiste nelle specifiche HTML5. Il tag corretto per la navigazione è &lt;nav&gt;, più breve e standard."
+                    },
+                    23: {
+                        A: "'method' specifica GET o POST come metodo HTTP, non la destinazione dei dati del form.",
+                        B: "'action' definisce l'URL del server a cui inviare i dati del form quando viene sottomesso dall'utente.",
+                        C: "'target' controlla dove aprire la risposta (stesso tab, nuovo tab, iframe), non l'URL di destinazione."
+                    },
+                    24: {
+                        A: "'necessary' non è un attributo HTML standard. Per campi obbligatori HTML5 fornisce l'attributo 'required'.",
+                        B: "'required' è l'attributo HTML5 per rendere obbligatorio un campo form, con validazione automatica prima dell'invio.",
+                        C: "'mandatory' non è un attributo HTML standard. Per indicare campi obbligatori si usa l'attributo booleano 'required'."
+                    },
+                    25: {
+                        A: "'autocomplete' attiva/disattiva la funzione di completamento automatico nei form, utile per dati frequentemente inseriti come email.",
+                        B: "'autofill' non è un attributo HTML standard. Per il completamento automatico si usa 'autocomplete=\"on\"' o \"off\".",
+                        C: "'autosuggestion' non è un attributo HTML standard. I browser usano 'autocomplete' per gestire i suggerimenti nei form."
+                    },
+                    26: {
+                        A: "&lt;sound&gt; non è un tag HTML5 valido. Per contenuti audio si usa &lt;audio&gt; con vari formati supportati.",
+                        B: "&lt;mp3&gt; non è un tag HTML5 valido. I formati audio sono specificati tramite l'attributo src o elementi &lt;source&gt;.",
+                        C: "&lt;audio&gt; è l'elemento standard HTML5 per contenuti sonori. Supporta controlli integrati e formati multipli tramite &lt;source&gt;."
+                    },
+                    27: {
+                        A: "'background-color' è una proprietà CSS, non un attributo HTML. Va usata in fogli di stile o nell'attributo style.",
+                        B: "Lo stile inline è il metodo moderno per impostare il colore di sfondo, usando la proprietà CSS background-color nell'attributo style.",
+                        C: "'bgcolor' è obsoleto in HTML5 e sconsigliato. Meglio usare CSS con background-color per separare contenuto e presentazione."
+                    },
+                    28: {
+                        A: "&lt;article&gt; identifica contenuti autonomi e indipendenti in HTML5, come post di blog o notizie che hanno senso anche isolati.",
+                        B: "&lt;post&gt; non è un tag HTML5 valido. Per contenuti autonomi come articoli o post si usa &lt;article&gt;.",
+                        C: "&lt;content&gt; non è un tag HTML5 standard. Per contenuti principali si usa &lt;main&gt;, per articoli indipendenti &lt;article&gt;."
+                    },
+                    29: {
+                        A: "&lt;dropdown&gt; non è un tag HTML valido. I menu a tendina si creano con &lt;select&gt; e &lt;option&gt;.",
+                        B: "&lt;select&gt; crea menu a tendina, con elementi &lt;option&gt; all'interno per le singole voci selezionabili dall'utente.",
+                        C: "&lt;option&gt; definisce le singole voci selezionabili in un menu, ma deve essere contenuto in un elemento &lt;select&gt;."
+                    }
+                };
+                
+                if (correctAnswer === userAnswer) {
+                    feedbackElement.className = 'feedback';
+                    const explanation = explanations[questionIndex][userAnswer];
+                    feedbackElement.innerHTML = `<span style='color: #4CAF50;'>✓</span> ${explanation}`;
+                } else if (correctAnswer.includes(userAnswer) && correctAnswer.length > 1) {
+                    // Risposta parzialmente corretta (per domande con più risposte corrette)
+                    feedbackElement.className = 'feedback';
+                    const explanation = explanations[questionIndex][userAnswer];
+                    feedbackElement.innerHTML = `<span style='color: #FFC107;'>⚠</span> ${explanation}`;
+                } else {
+                    feedbackElement.className = 'feedback';
+                    const explanation = explanations[questionIndex][userAnswer] || "Risposta non corretta.";
+                    feedbackElement.innerHTML = `<span style='color: #F44336;'>✗</span> ${explanation}`;
+                }
+            }
+        }
+
+        // Navigazione tra le domande
+        function showPreviousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+            }
+        }
+
+        function showNextQuestion() {
+            if (currentQuestion < totalQuestions - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            }
+        }
+
+        // Invio del quiz
+        function submitQuiz() {
+            // Calcola il punteggio finale
+            score = 0;
+            userAnswers.forEach((answer, index) => {
+                if (questions[index].correctAnswer === answer) {
+                    score++;
+                }
+            });
+            
+            // Calcola il punteggio al primo tentativo
+            firstAttemptScore = 0;
+            firstAttemptAnswers.forEach((answer, index) => {
+                if (questions[index].correctAnswer === answer) {
+                    firstAttemptScore++;
+                }
+            });
+            
+            // Calcola le percentuali
+            const finalScorePercentage = Math.round((score / totalQuestions) * 100);
+            const firstAttemptPercentage = Math.round((firstAttemptScore / totalQuestions) * 100);
+            
+            // Mostra i risultati
+            correctAnswers.textContent = score;
+            totalAnswers.textContent = totalQuestions;
+            
+            // Imposta le barre e le percentuali
+            setProgressBar('first-attempt-bar', firstAttemptPercentage);
+            setProgressBar('final-score-bar', finalScorePercentage);
+            
+            firstAttemptScoreElement.textContent = firstAttemptPercentage + '%';
+            finalScoreElement.textContent = finalScorePercentage + '%';
+            
+            // Nascondi il quiz e mostra i risultati
+            quizContainer.style.display = 'none';
+            document.querySelector('.button-container').style.display = 'none';
+            document.querySelector('.progress-container').style.display = 'none';
+            scoreContainer.style.display = 'block';
+        }
+        
+        // Imposta la barra di progresso verticale con il colore appropriato
+        function setProgressBar(elementId, percentage) {
+            const bar = document.getElementById(elementId);
+            
+            // Imposta l'altezza della barra
+            bar.style.height = percentage + '%';
+            
+            // Imposta il colore in base alla percentuale
+            if (percentage < 31) {
+                bar.className = 'vertical-bar red';
+            } else if (percentage < 51) {
+                bar.className = 'vertical-bar yellow';
+            } else if (percentage < 96) {
+                bar.className = 'vertical-bar green';
+            } else {
+                bar.className = 'vertical-bar gold';
+            }
+        }
+
+        // Riavvia il quiz
+        function restartQuiz() {
+            currentQuestion = 0;
+            userAnswers = Array(totalQuestions).fill("");
+            firstAttemptAnswers = Array(totalQuestions).fill("");
+            score = 0;
+            firstAttemptScore = 0;
+            
+            quizContainer.style.display = 'block';
+            document.querySelector('.button-container').style.display = 'block';
+            document.querySelector('.progress-container').style.display = 'block';
+            scoreContainer.style.display = 'none';
+            
+            showQuestion(currentQuestion);
+        }
+
+        // Rendi le funzioni accessibili globalmente
+        window.selectOption = selectOption;
+        
+        // Inizializza il quiz
+        initQuiz();
+    </script>
+</body>
+</html>
